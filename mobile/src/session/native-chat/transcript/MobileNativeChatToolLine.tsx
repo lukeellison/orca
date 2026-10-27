@@ -15,7 +15,6 @@ import {
   type NativeChatWebSearchResult
 } from '../../../../../src/shared/native-chat/tools/native-chat-tool-identity'
 import { nativeChatToolIconName } from '../../../../../src/shared/native-chat/tools/native-chat-tool-icon'
-import { nativeChatFullCommand } from '../../../../../src/shared/native-chat/tools/native-chat-tool-input-text'
 import {
   NATIVE_CHAT_TOOL_ROW_VERB_COPY,
   nativeChatToolLineLabel
@@ -172,7 +171,7 @@ export function MobileNativeChatToolLine({
   const label = call ? nativeChatToolLineLabel(call, result) : null
   const body = call ? result : block.type === 'tool-result' ? block : undefined
   const fullCommand = label?.commandDetail ?? null
-  const copyCommand = call && label?.command ? nativeChatFullCommand(call.input) : null
+  const copyCommand = label?.fullCommand ?? null
   // User interruption is not tool failure.
   const lifecycle = call ? agentJournalToolCallLifecycle(call) : null
   const failed = lifecycle === 'failed' || (lifecycle !== 'interrupted' && result?.isError === true)
