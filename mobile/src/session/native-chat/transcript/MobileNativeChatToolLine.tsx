@@ -170,8 +170,8 @@ export function MobileNativeChatToolLine({
   const call = isToolCallBlock(block) ? block : undefined
   const label = call ? nativeChatToolLineLabel(call, result) : null
   const body = call ? result : block.type === 'tool-result' ? block : undefined
-  const fullCommand = label?.commandDetail ?? null
-  const copyCommand = label?.fullCommand ?? null
+  const commandDetail = label?.commandDetail ?? null
+  const fullCommand = label?.fullCommand ?? null
   // User interruption is not tool failure.
   const lifecycle = call ? agentJournalToolCallLifecycle(call) : null
   const failed = lifecycle === 'failed' || (lifecycle !== 'interrupted' && result?.isError === true)
@@ -187,7 +187,7 @@ export function MobileNativeChatToolLine({
   // An edit that has not landed has no output yet, but the change it proposes is worth opening.
   const hasDetail =
     body !== undefined ||
-    fullCommand !== null ||
+    commandDetail !== null ||
     results.length > 0 ||
     (call !== undefined && diffFromToolCall(call.name, call.input) !== null)
   const filePath = label?.filePath ?? null
@@ -198,9 +198,9 @@ export function MobileNativeChatToolLine({
 
   return (
     <View testID={memberId}>
-      <View style={copyCommand ? styles.line : undefined}>
+      <View style={styles.line}>
         <Pressable
-          style={[styles.line, copyCommand && styles.cardToggle]}
+          style={[styles.line, styles.cardToggle]}
           onPress={() => hasDetail && setExpanded(!expanded)}
           disabled={!hasDetail}
           accessibilityRole="button"
@@ -246,8 +246,8 @@ export function MobileNativeChatToolLine({
             ) : null}
           </View>
         </Pressable>
-        {copyCommand ? (
-          <MobileSourceCopyButton text={copyCommand} accessibilityLabel="Copy command" />
+        {fullCommand ? (
+          <MobileSourceCopyButton text={fullCommand} accessibilityLabel="Copy command" />
         ) : null}
       </View>
       {hasDetail && expanded ? (
@@ -256,7 +256,7 @@ export function MobileNativeChatToolLine({
           disclosureKey={disclosureKey}
           call={call}
           body={body}
-          fullCommand={fullCommand}
+          fullCommand={commandDetail}
           commandLanguage={label?.commandLanguage ?? null}
           results={results}
           fontScale={fontScale}
