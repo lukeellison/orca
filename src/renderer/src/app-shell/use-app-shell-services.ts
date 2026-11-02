@@ -43,7 +43,7 @@ export function useAppShellServices(): void {
   useRemoteRuntimeRecoveryTriggers()
   useVisibleHostedReviewRefresh({ enabled: workspaceSessionReady })
   useTerminalViewerColorPublication()
-  useAutomationDispatchEvents()
+  useAutomationDispatchEvents(workspaceSessionReady)
   useReadOnScreenAttention()
   useAppMenuPaste()
   useAppMenuSelectionActions()
