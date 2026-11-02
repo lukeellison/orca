@@ -36,8 +36,6 @@ const makeRepo = (): Repo => ({
 
 const SETUP_GONE = 'Project is not set up on the selected automation host anymore.'
 
-const NO_WINDOW = 'No Orca window was available to launch the automation.'
-
 /** Inject persisted drift because creation derives a valid run context. */
 async function seedUnresolvableAutomation(): Promise<{ store: Store; automation: Automation }> {
   const seed = await createStore()
@@ -66,20 +64,6 @@ async function seedUnresolvableAutomation(): Promise<{ store: Store; automation:
   }
   writePersistedStateJson(file, JSON.stringify(state))
   return { store: await createStore(), automation }
-}
-
-function seedRunnableAutomation(store: Store): Automation {
-  store.addRepo(makeRepo())
-  return store.createAutomation({
-    name: 'Nightly check',
-    prompt: 'Check the repo',
-    agentId: 'claude',
-    projectId: 'r1',
-    workspaceMode: 'new_per_run',
-    timezone: 'UTC',
-    rrule: 'FREQ=DAILY;BYHOUR=9;BYMINUTE=0',
-    dtstart: new Date('2026-05-12T00:00:00').getTime()
-  })
 }
 
 function attachedService(store: Store): AutomationService {
@@ -141,27 +125,6 @@ describe('repeated skipped_unavailable coalescing', () => {
       occurrenceCount: 3,
       scheduledFor: new Date('2026-05-13T09:00:00').getTime(),
       lastOccurrenceAt: new Date('2026-05-15T09:00:00').getTime()
-    })
-  })
-
-  it('folds the refusals a closed window produces instead of writing a row each', async () => {
-    vi.setSystemTime(new Date('2026-05-13T08:00:00'))
-    const store = await createStore()
-    const automation = seedRunnableAutomation(store)
-    const service = attachedService(store)
-
-    await evaluateAt(store, service, automation.id, '2026-05-13T09:01:00')
-    service.setWebContents(null)
-    await evaluateAt(store, service, automation.id, '2026-05-14T09:01:00')
-    await evaluateAt(store, service, automation.id, '2026-05-15T09:01:00')
-    await evaluateAt(store, service, automation.id, '2026-05-16T09:01:00')
-
-    const runs = store.listAutomationRuns(automation.id)
-    expect(runs.map((run) => run.status)).toEqual(['skipped_unavailable', 'dispatching'])
-    expect(runs[0]).toMatchObject({
-      error: NO_WINDOW,
-      occurrenceCount: 3,
-      lastOccurrenceAt: new Date('2026-05-16T09:00:00').getTime()
     })
   })
 

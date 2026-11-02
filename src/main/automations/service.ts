@@ -254,6 +254,10 @@ export class AutomationService {
       await this.runs.advanceNextRun(automation.id, now)
       return
     }
+    // macOS keeps running with no window: stay due so the next renderer-ready runs it within grace.
+    if (refusal?.errorCode === 'noDispatchHost') {
+      return
+    }
     if (refusal && (await this.runs.repeatSkip(automation.id, refusal.error, scheduledFor))) {
       await this.runs.advanceNextRun(automation.id, now)
       return
