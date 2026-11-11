@@ -116,7 +116,11 @@ export function renderNotificationsSettingsSection(
       searchEntries={navigation.getSectionSearchEntries('notifications')}
     >
       {view.isSectionMounted('notifications') ? (
-        <NotificationsPane settings={model.settings} updateSettings={model.updateSettings} />
+        <NotificationsPane
+          settings={model.settings}
+          updateSettings={model.updateSettings}
+          hostScope={model.settingsHostScope}
+        />
       ) : null}
     </SettingsSection>
   ) : null

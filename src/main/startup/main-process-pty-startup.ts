@@ -179,6 +179,9 @@ export function startTerminalRuntimeStartupServices(): WindowsDesktopStartupServ
       agentHookServer.setTransportInterferenceListener((report) => {
         track('agent_hook_transport_blocked', { count: report.count })
       })
+      agentHookServer.setClaudeFinishedWaitsForBackgroundShells(
+        () => state.store?.getSettings().claudeFinishedWaitsForBackgroundShells === true
+      )
       await agentHookServer.start({
         statusHooksEnabled: isAgentStatusHooksEnabled(settings),
         env: app.isPackaged ? 'production' : 'development',

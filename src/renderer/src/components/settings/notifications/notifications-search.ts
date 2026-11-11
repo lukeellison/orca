@@ -59,6 +59,28 @@ export const getNotificationsPaneSearchEntries = createLocalizedCatalog(() => [
   },
   {
     title: translate(
+      'settings.notifications.claudeShellFinishHold.title',
+      'Wait for background shells'
+    ),
+    description: translate(
+      'settings.notifications.claudeShellFinishHold.description',
+      'Claude’s finished alert waits up to 30 minutes for background shells it started to exit.'
+    ),
+    keywords: [
+      ...translateSearchKeyword('auto.components.settings.agents.search.f412abbba5', 'claude'),
+      ...translateSearchKeyword(
+        'auto.components.settings.terminal.search.f6dd9ff606',
+        'background'
+      ),
+      ...translateSearchKeyword('auto.components.settings.terminal.search.ddd5efe113', 'shell'),
+      ...translateSearchKeyword(
+        'auto.components.settings.notifications.search.5f7472d3fb',
+        'complete'
+      )
+    ]
+  },
+  {
+    title: translate(
       'auto.components.settings.notifications.search.32f70cca40',
       'Agent needs input'
     ),

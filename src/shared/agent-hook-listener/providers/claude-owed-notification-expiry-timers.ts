@@ -7,11 +7,12 @@ import {
   CLAUDE_OWED_TASK_NOTIFICATION_LEASE_MS,
   claudeOwedTaskNotificationDeadline
 } from './claude-owed-task-notifications'
+import { releaseExpiredClaudeShellFinishHold } from './claude-shell-finish-hold'
 import { CodexSubagentPollScheduler } from '../transcripts/codex-subagent-poll-scheduler'
 
 type PublishRow = (row: AgentHookEventPayload) => void
 
-/** Wake the local/remote execution host when owed notifications expire without another event. Re-read the pane so closed/moved leftovers are no-ops. */
+/** Wake the local/remote execution host when owed notifications or a shell-held finish expire without another event. Re-read the pane so closed/moved leftovers are no-ops. */
 export class ClaudeOwedNotificationExpiryTimers {
   private readonly wakeups = new CodexSubagentPollScheduler<PublishRow>(0, (paneKey, publish) =>
     this.restate(paneKey, publish)
@@ -38,15 +39,18 @@ export class ClaudeOwedNotificationExpiryTimers {
     this.wakeups.clearAll()
   }
 
-  /** Only an idle main agent has one: the lease does not run while it is in a turn. */
+  /** Only an idle main agent has one: the lease does not run while it is in a turn, and its Stop rechecks a held finish. */
   private deadline(paneKey: string): number | undefined {
     const idleSince = mainAgentIdleSince(this.state.claudeLeadStateByPaneKey.get(paneKey))
-    return idleSince === undefined
-      ? undefined
-      : claudeOwedTaskNotificationDeadline(
-          this.state.claudeLaunchedBackgroundTasksByPaneKey.get(paneKey),
-          idleSince
-        )
+    if (idleSince === undefined) {
+      return undefined
+    }
+    const owed = claudeOwedTaskNotificationDeadline(
+      this.state.claudeLaunchedBackgroundTasksByPaneKey.get(paneKey),
+      idleSince
+    )
+    const held = this.state.claudeShellHeldFinishByPaneKey.get(paneKey)
+    return owed === undefined || held === undefined ? (owed ?? held) : Math.min(owed, held)
   }
 
   private restate(paneKey: string, publish: PublishRow): void {
@@ -59,6 +63,7 @@ export class ClaudeOwedNotificationExpiryTimers {
       this.arm(paneKey, publish)
       return
     }
+    releaseExpiredClaudeShellFinishHold(this.state, paneKey)
     const row = this.state.lastStatusByPaneKey.get(paneKey)
     // Use the child-end fold so expired debt produces the same row as other Claude events.
     const payload = buildClaudeCachedLeadStatusPayload(this.state, undefined, paneKey, {})

@@ -378,6 +378,9 @@ export type GlobalSettings = GlobalSettingsBase & {
   /** Off keeps each Codex home's history to itself: Orca links no sessions between accounts or
    *  into ~/.codex, and removes nothing already linked (#24511). Absent means on (#10770). */
   codexShareHistoryAcrossAccounts?: boolean
+  /** Opt-in: Claude's "finished" waits up to 30 minutes for Bash shells it left running. Read by
+   *  the host that runs the hooks; absent means off (#30091). */
+  claudeFinishedWaitsForBackgroundShells?: boolean
   /** Custom CODEX_HOME for Codex session-history discovery (defaults to ~/.codex).
    *  History-only: does not change which account/config/hooks Orca uses. */
   codexSessionSourceHome?: {

@@ -34,6 +34,7 @@ import {
   claudeRowHasUnlistedLiveWork
 } from './claude-pane-hold-evidence'
 import { buildClaudeStatusPayload } from './claude-status-build'
+import { claudeTurnCompletedAt } from './claude-shell-finish-hold'
 import { claudeWaitRequest, settleClaudeToolBatch } from './claude-tool-request-wait'
 import { trackClaudeTaskNotificationDelivery } from './claude-task-notification-delivery'
 import { recordClaudeTeammateSpawn } from './claude-teammate-spawn'
@@ -68,6 +69,7 @@ export function normalizeClaudeEvent(
     state.claudeRunningNonAgentTaskPaneKeys.delete(paneKey)
     state.claudeActiveSessionCronPaneKeys.delete(paneKey)
     state.claudeLaunchedBackgroundTasksByPaneKey.delete(paneKey)
+    state.claudeShellHeldFinishByPaneKey.delete(paneKey)
     // New sessions start a new main-agent clock.
     setClaudeMainAgentTurnState(state, paneKey, { state: 'done', stateStartedAt: Date.now() })
     return buildClaudeStatusPayload(state, eventName, promptText, paneKey, hookPayload, {
@@ -283,20 +285,25 @@ export function normalizeClaudeEvent(
   // Reuse resolved state for compact ownership instead of folding twice (#15202).
   const effectiveState = resolvedStatus.stateName
   const ownPreviousLead = previousLead?.waitingAgentId ? previousLead.stateBeforeWait : previousLead
+  // Why: a wake-up turn inherits a shell-held turn the user started, which is still unannounced.
+  const selfStarted =
+    ownPreviousLead?.taskWakeupTurn === true && !state.claudeShellHeldFinishByPaneKey.has(paneKey)
   // Stamp (announce now, pair the later all-clear) only a held turn that already counts as finished; cancelled turns earn none.
-  const turnCompletedAt =
-    eventAgentId === undefined &&
-    isTurnBoundary &&
-    outcome !== 'cancellation' &&
-    isAgentStatusHeldOpenByChildWork({
-      state: resolvedStatus.stateName,
-      mainAgent: { state: reportedStateName }
-    }) &&
-    heldTurnCountsAsFinished(resolvedStatus, outcome, ownPreviousLead?.taskWakeupTurn === true) &&
-    // Owed notifications wake the lead within ~100ms; announcing first would duplicate completion.
-    claudePaneHasRunningChildWork(state, paneKey)
-      ? Date.now()
-      : undefined
+  const turnCompletedAt = claudeTurnCompletedAt(state, paneKey, backgroundTasks, {
+    finished:
+      eventAgentId === undefined &&
+      isTurnBoundary &&
+      outcome !== 'cancellation' &&
+      isAgentStatusHeldOpenByChildWork({
+        state: resolvedStatus.stateName,
+        mainAgent: { state: reportedStateName }
+      }) &&
+      heldTurnCountsAsFinished(resolvedStatus, outcome, selfStarted) &&
+      // Owed notifications wake the lead within ~100ms; announcing first would duplicate completion.
+      claudePaneHasRunningChildWork(state, paneKey),
+    failed: outcome === 'failure',
+    settled: effectiveState === 'done' || (eventName === 'UserPromptSubmit' && !taskWakeupTurn)
+  })
 
   setClaudeMainAgentTurnState(state, paneKey, {
     state: reportedStateName,

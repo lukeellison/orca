@@ -8,6 +8,7 @@ import {
   settleClaudeTaskNotification
 } from './claude-owed-task-notifications'
 import { readClaudeTaskNotification } from '../../claude-task-notification-text'
+import { CLAUDE_SHELL_FINISH_HOLD_MS } from './claude-shell-finish-hold'
 import type { HookListenerState } from '../listener-state'
 import { readString } from '../tool-input-preview'
 
@@ -27,7 +28,13 @@ export function trackClaudeTaskNotificationDelivery(
     if (launch) {
       const launched = tasks ?? new Map()
       state.claudeLaunchedBackgroundTasksByPaneKey.set(paneKey, launched)
-      recordClaudeBackgroundTaskLaunch(launched, launch)
+      recordClaudeBackgroundTaskLaunch(launched, {
+        ...launch,
+        // Why: only a Bash shell may hold "finished"; a Monitor or worker wait never does.
+        ...(toolName === 'Bash' && !launch.awaitsAgents
+          ? { holdsFinishUntil: Date.now() + CLAUDE_SHELL_FINISH_HOLD_MS }
+          : {})
+      })
     } else if (tasks && toolName === 'TaskStop' && typeof response === 'object' && response) {
       const stoppedId = readString({ ...response }, 'task_id')
       if (stoppedId) {

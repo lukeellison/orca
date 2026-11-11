@@ -77,6 +77,8 @@ export class RuntimeClientSettingsController {
       agentStatusHooksEnabled: settings.agentStatusHooksEnabled !== false,
       // Always present, so a client can tell this host accepts the setting (older hosts omit it).
       codexShareHistoryAcrossAccounts: settings.codexShareHistoryAcrossAccounts !== false,
+      claudeFinishedWaitsForBackgroundShells:
+        settings.claudeFinishedWaitsForBackgroundShells === true,
       claudeSubagentNavigationEnabled: settings.claudeSubagentNavigationEnabled !== false,
       // Mobile honors this Copy option; absence from older hosts means on (#19770).
       terminalCopyTrimsGutter: settings.terminalCopyTrimsGutter !== false,

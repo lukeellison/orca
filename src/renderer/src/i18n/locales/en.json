@@ -1387,6 +1387,14 @@
       "settings": "Settings",
       "label": "Settings breadcrumb",
       "close": "Close settings"
+    },
+    "notifications": {
+      "claudeShellFinishHold": {
+        "updateFailed": "Could not update the setting on {{host}}.",
+        "title": "Wait for background shells",
+        "unsupported": "Update Orca on {{host}} to change this setting there.",
+        "description": "Claude’s finished alert waits up to 30 minutes for background shells it started to exit."
+      }
     }
   },
   "menu": {

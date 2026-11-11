@@ -122,6 +122,7 @@ export type RuntimeStore = {
     agentWorkspaceTrustEnabled?: GlobalSettings['agentWorkspaceTrustEnabled']
     codexManagedAccounts?: GlobalSettings['codexManagedAccounts']
     codexShareHistoryAcrossAccounts?: GlobalSettings['codexShareHistoryAcrossAccounts']
+    claudeFinishedWaitsForBackgroundShells?: GlobalSettings['claudeFinishedWaitsForBackgroundShells']
     nestedWorkerMaxDepth?: GlobalSettings['nestedWorkerMaxDepth']
     orchestrationWorkerAutoReleaseEnabled?: GlobalSettings['orchestrationWorkerAutoReleaseEnabled']
     workspaceDir: string

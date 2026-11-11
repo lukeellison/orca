@@ -153,6 +153,9 @@ async function startOrcadRuntime(
   // Subscribe before hooks start so early turns are counted.
   const { startOrcadStats } = await import('./orcad-stats')
   const stats = startOrcadStats(runtimeUserDataPath, agentHookServer, registerCleanup)
+  agentHookServer.setClaudeFinishedWaitsForBackgroundShells(
+    () => profileStore.getSettings().claudeFinishedWaitsForBackgroundShells === true
+  )
   await startOrcadAgentHookServer(agentHookServer, {
     env: 'production',
     userDataPath: runtimeUserDataPath,

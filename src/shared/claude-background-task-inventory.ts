@@ -42,6 +42,8 @@ export function readClaudeBackgroundAgentTasks(hookPayload: Record<string, unkno
   hasRunningNonAgentTask: boolean
   /** Ids of the running shell-like entries; one without an id is counted but not listed. */
   runningNonAgentTaskIds: string[]
+  /** A running shell-like entry had no id, so the ids above are not all of them. */
+  hasUnlistedRunningNonAgentTask: boolean
   /** Running shells blocked on `orca orchestration check --wait`, which recovers them after a listener restart. */
   runningAgentWaitIds: string[]
 } {
@@ -53,6 +55,7 @@ export function readClaudeBackgroundAgentTasks(hookPayload: Record<string, unkno
       truncated: false,
       hasRunningNonAgentTask: false,
       runningNonAgentTaskIds: [],
+      hasUnlistedRunningNonAgentTask: false,
       runningAgentWaitIds: []
     }
   }
@@ -60,11 +63,13 @@ export function readClaudeBackgroundAgentTasks(hookPayload: Record<string, unkno
   let truncated = false
   let hasRunningNonAgentTask = false
   const runningNonAgentTaskIds: string[] = []
+  let hasUnlistedRunningNonAgentTask = false
   const runningAgentWaitIds: string[] = []
   for (const item of raw) {
     if (typeof item !== 'object' || item === null) {
       truncated = true
       hasRunningNonAgentTask = true
+      hasUnlistedRunningNonAgentTask = true
       continue
     }
     const obj = item as Record<string, unknown>
@@ -75,6 +80,7 @@ export function readClaudeBackgroundAgentTasks(hookPayload: Record<string, unkno
     if (taskType.length === 0) {
       truncated = true
       hasRunningNonAgentTask ||= !isTerminal
+      hasUnlistedRunningNonAgentTask ||= !isTerminal
       continue
     }
     const isAgentTask = isAgentChildWorkKind(classifyClaudeBackgroundTaskKind(taskType))
@@ -87,6 +93,8 @@ export function readClaudeBackgroundAgentTasks(hookPayload: Record<string, unkno
         if (runsOrcaOrchestrationWait(obj.command)) {
           runningAgentWaitIds.push(id)
         }
+      } else {
+        hasUnlistedRunningNonAgentTask = true
       }
     }
     if (!isAgentTask) {
@@ -110,6 +118,7 @@ export function readClaudeBackgroundAgentTasks(hookPayload: Record<string, unkno
     truncated,
     hasRunningNonAgentTask,
     runningNonAgentTaskIds,
+    hasUnlistedRunningNonAgentTask,
     runningAgentWaitIds
   }
 }

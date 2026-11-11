@@ -18,6 +18,8 @@ type ClaudeLaunchedBackgroundTask = {
   awaitsAgents?: true
   /** Known only from the main agent's task list (e.g. after a listener restart): a subagent may own it, so it owes the main agent nothing. */
   listedOnly?: true
+  /** A main-agent Bash shell may hold its turn's "finished" until this time (opt-in). */
+  holdsFinishUntil?: number
 }
 
 /** An idle notification lease is expectation, not proof: Stop never promises an empty queue and posts can be lost/reordered. Captured deliveries took 40–130ms; Claude idle_prompt consistently fired after 60s. */
@@ -62,7 +64,10 @@ export function readClaudeBackgroundTaskLaunch(
 
 export function recordClaudeBackgroundTaskLaunch(
   tasks: ClaudeLaunchedBackgroundTasks,
-  launch: Pick<ClaudeLaunchedBackgroundTask, 'kind' | 'awaitsAgents' | 'listedOnly'> & {
+  launch: Pick<
+    ClaudeLaunchedBackgroundTask,
+    'kind' | 'awaitsAgents' | 'listedOnly' | 'holdsFinishUntil'
+  > & {
     id: string
   }
 ): void {
@@ -81,7 +86,10 @@ export function recordClaudeBackgroundTaskLaunch(
     tasks.set(launch.id, {
       kind: launch.kind,
       ...(launch.awaitsAgents ? { awaitsAgents: true as const } : {}),
-      ...(launch.listedOnly ? { listedOnly: true as const } : {})
+      ...(launch.listedOnly ? { listedOnly: true as const } : {}),
+      ...(launch.holdsFinishUntil !== undefined
+        ? { holdsFinishUntil: launch.holdsFinishUntil }
+        : {})
     })
   }
 }

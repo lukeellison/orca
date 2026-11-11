@@ -11,6 +11,8 @@ import {
 import { NotificationSettingToggle } from './NotificationSettingToggle'
 import { NotificationHostToggles } from './NotificationHostToggles'
 import { NotificationSoundSection } from './NotificationSoundSection'
+import { ClaudeShellFinishHoldToggle } from './ClaudeShellFinishHoldToggle'
+import type { SettingsHostScope } from '../host-scope/settings-host-scope'
 import { sendNotificationSettingsTestNotification } from '@/components/notifications/notification-test-delivery'
 import { useTranslate } from '@/i18n/use-translate'
 
@@ -38,11 +40,13 @@ function resolveNotificationVolumeDraftState(
 type NotificationsPaneProps = {
   settings: GlobalSettings
   updateSettings: (updates: Partial<GlobalSettings>) => void | Promise<void>
+  hostScope: SettingsHostScope
 }
 
 export function NotificationsPane({
   settings,
-  updateSettings
+  updateSettings,
+  hostScope
 }: NotificationsPaneProps): React.JSX.Element {
   const t = useTranslate()
   const notificationSettings = settings.notifications
@@ -151,6 +155,12 @@ export function NotificationsPane({
             agentTaskComplete: !notificationSettings.agentTaskComplete
           })
         }
+      />
+      <ClaudeShellFinishHoldToggle
+        settings={settings}
+        updateSettings={updateSettings}
+        hostScope={hostScope}
+        disabled={!notificationSettings.enabled || !notificationSettings.agentTaskComplete}
       />
 
       <NotificationSettingToggle

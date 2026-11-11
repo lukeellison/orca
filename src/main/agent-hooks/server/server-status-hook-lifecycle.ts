@@ -31,6 +31,11 @@ export abstract class AgentHookServerStatusHookLifecycle extends AgentHookServer
     await respondAfterAgentToolPluginHooks(res, source, body, req.headers, accepted)
   }
 
+  /** The listener never reads settings itself; its host passes a live read of this opt-in. */
+  setClaudeFinishedWaitsForBackgroundShells(read: () => boolean): void {
+    this.state.claudeFinishedWaitsForBackgroundShells = read
+  }
+
   setStatusHooksEnabled(enabled: boolean): void {
     if (enabled === this.statusHooksEnabled) {
       return

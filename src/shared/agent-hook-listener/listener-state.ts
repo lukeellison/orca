@@ -62,6 +62,10 @@ export type HookListenerState = {
   claudeActiveSessionCronPaneKeys: Set<string>
   /** Background tasks each pane's main agent launched, and which of them still owe it a notification. */
   claudeLaunchedBackgroundTasksByPaneKey: Map<string, ClaudeLaunchedBackgroundTasks>
+  /** Opt-in host setting, read live: Bash shells the main agent left running may hold its "finished". */
+  claudeFinishedWaitsForBackgroundShells: () => boolean
+  /** Panes whose finished turn is held for background shells, until this deadline. */
+  claudeShellHeldFinishByPaneKey: Map<string, number>
   /** Compact whose completion each pane already applied, so relay duplicates can't refresh the row. */
   claudeConsumedCompactPromptIdByPaneKey: Map<string, string>
   /** Lead session_id changes retire replaced-conversation claims even without SessionStart (/clear/relaunch/resume). */
@@ -153,6 +157,8 @@ export function createHookListenerState(
     claudeRunningNonAgentTaskPaneKeys: new Set(),
     claudeActiveSessionCronPaneKeys: new Set(),
     claudeLaunchedBackgroundTasksByPaneKey: new Map(),
+    claudeFinishedWaitsForBackgroundShells: () => false,
+    claudeShellHeldFinishByPaneKey: new Map(),
     claudeConsumedCompactPromptIdByPaneKey: new Map(),
     claudeSessionOwnerByPaneKey: new Map(),
     hookRootAttempts: new Map(),
@@ -237,6 +243,7 @@ export function clearPaneCacheState(state: HookListenerState, paneKey: string): 
   state.claudeRunningNonAgentTaskPaneKeys.delete(paneKey)
   state.claudeActiveSessionCronPaneKeys.delete(paneKey)
   state.claudeLaunchedBackgroundTasksByPaneKey.delete(paneKey)
+  state.claudeShellHeldFinishByPaneKey.delete(paneKey)
   state.claudeSessionOwnerByPaneKey.delete(paneKey)
   state.codexSubagentRosterByPaneKey.delete(paneKey)
   state.codexSubagentTranscriptByPaneKey.delete(paneKey)
@@ -278,6 +285,7 @@ export function movePaneCacheState(
   movePaneScopedSetEntries(state.claudeRunningNonAgentTaskPaneKeys, fromPaneKey, toPaneKey)
   movePaneScopedSetEntries(state.claudeActiveSessionCronPaneKeys, fromPaneKey, toPaneKey)
   movePaneScopedMapEntries(state.claudeLaunchedBackgroundTasksByPaneKey, fromPaneKey, toPaneKey)
+  movePaneScopedMapEntries(state.claudeShellHeldFinishByPaneKey, fromPaneKey, toPaneKey)
   movePaneScopedMapEntries(state.claudeSessionOwnerByPaneKey, fromPaneKey, toPaneKey)
   movePaneScopedMapEntries(state.codexSubagentRosterByPaneKey, fromPaneKey, toPaneKey)
   movePaneScopedMapEntries(state.codexSubagentTranscriptByPaneKey, fromPaneKey, toPaneKey)
@@ -324,6 +332,7 @@ export function clearAllListenerCaches(state: HookListenerState): void {
   state.claudeRunningNonAgentTaskPaneKeys.clear()
   state.claudeActiveSessionCronPaneKeys.clear()
   state.claudeLaunchedBackgroundTasksByPaneKey.clear()
+  state.claudeShellHeldFinishByPaneKey.clear()
   state.claudeSessionOwnerByPaneKey.clear()
   state.codexSubagentRosterByPaneKey.clear()
   state.codexSubagentTranscriptByPaneKey.clear()

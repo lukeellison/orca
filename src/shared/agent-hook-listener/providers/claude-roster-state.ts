@@ -68,6 +68,7 @@ export function voidClaimsOfReplacedClaudeSession(
   state.claudeActiveSessionCronPaneKeys.delete(paneKey)
   // Replaced conversations' owed notifications cannot reach the new one.
   state.claudeLaunchedBackgroundTasksByPaneKey.delete(paneKey)
+  state.claudeShellHeldFinishByPaneKey.delete(paneKey)
   const roster = state.claudeSubagentRosterByPaneKey.get(paneKey)
   if (!roster) {
     return
